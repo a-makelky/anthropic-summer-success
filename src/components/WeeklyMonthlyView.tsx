@@ -35,12 +35,14 @@ interface WeeklyMonthlyViewProps {
   children: Child[];
   activities: Activity[];
   behaviors: Behavior[];
+  vacationDays: string[];
 }
 
 const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({ 
   children, 
   activities, 
-  behaviors 
+  behaviors,
+  vacationDays
 }) => {
   const [selectedChild, setSelectedChild] = useState(children[0]?.id || '');
   const [viewType, setViewType] = useState<'weekly' | 'monthly'>('weekly');
@@ -129,8 +131,24 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
     const daysInPeriod = eachDayOfInterval(currentInterval);
     return daysInPeriod.map(day => {
       const dayString = format(day, 'yyyy-MM-dd');
+      const isVacation = vacationDays.includes(dayString);
       const dayActivities = getFilteredActivities().filter(a => a.date === dayString);
       const dayBehaviors = getFilteredBehaviors().filter(b => b.date === dayString);
+      
+      // If it's a vacation day, return zero progress
+      if (isVacation) {
+        return {
+          date: day,
+          dateString: dayString,
+          academicTime: 0,
+          skillTime: 0,
+          chores: 0,
+          behaviorIssues: dayBehaviors.length,
+          goalsMetCount: 0,
+          allGoalsMet: false,
+          isVacation: true
+        };
+      }
       
       const academicTime = dayActivities
         .filter(a => a.type === 'education' && a.completed)
@@ -158,7 +176,8 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
         chores,
         behaviorIssues,
         goalsMetCount,
-        allGoalsMet: goalsMetCount === 3
+        allGoalsMet: goalsMetCount === 3,
+        isVacation: false
       };
     });
   };
@@ -271,7 +290,9 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
         <CardContent>
           <div className="space-y-3">
             {dailyData.map(day => (
-              <div key={day.dateString} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={day.dateString} className={`flex items-center justify-between p-3 rounded-lg ${
+                day.isVacation ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50'
+              }`}>
                 <div className="flex items-center gap-4">
                   <div className="font-medium min-w-[80px]">
                     {format(day.date, 'MMM d')}
@@ -279,31 +300,44 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
                   <div className="text-sm text-gray-600">
                     {format(day.date, 'EEEE')}
                   </div>
+                  {day.isVacation && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-600">
+                      🏖️ Vacation
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <div className="flex gap-2 text-sm">
-                    <span className={`px-2 py-1 rounded ${day.academicTime >= 120 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                      📚 {day.academicTime}min
-                    </span>
-                    <span className={`px-2 py-1 rounded ${day.skillTime >= 60 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                      💪 {day.skillTime}min
-                    </span>
-                    <span className={`px-2 py-1 rounded ${day.chores >= 2 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                      🏠 {day.chores}
-                    </span>
-                  </div>
-                  
-                  {day.behaviorIssues > 0 && (
-                    <Badge variant="destructive" className="text-xs">
-                      -{day.behaviorIssues} issues
-                    </Badge>
-                  )}
-                  
-                  {day.allGoalsMet ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  {!day.isVacation ? (
+                    <>
+                      <div className="flex gap-2 text-sm">
+                        <span className={`px-2 py-1 rounded ${day.academicTime >= 120 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                          📚 {day.academicTime}min
+                        </span>
+                        <span className={`px-2 py-1 rounded ${day.skillTime >= 60 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                          💪 {day.skillTime}min
+                        </span>
+                        <span className={`px-2 py-1 rounded ${day.chores >= 2 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                          🏠 {day.chores}
+                        </span>
+                      </div>
+                      
+                      {day.behaviorIssues > 0 && (
+                        <Badge variant="destructive" className="text-xs">
+                          -{day.behaviorIssues} issues
+                        </Badge>
+                      )}
+                      
+                      {day.allGoalsMet ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                      )}
+                    </>
                   ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                    <div className="text-orange-600 text-sm font-medium">
+                      No tracking on vacation day
+                    </div>
                   )}
                 </div>
               </div>

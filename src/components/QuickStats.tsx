@@ -41,14 +41,16 @@ interface QuickStatsProps {
   children: Child[];
   activities: Activity[];
   behaviors: Behavior[];
-  calculateDailyProgress: (childId: string) => DailyProgress;
+  calculateDailyProgress: (childId: string, date?: string) => DailyProgress;
+  vacationDays: string[];
 }
 
 const QuickStats: React.FC<QuickStatsProps> = ({ 
   children, 
   activities, 
   behaviors, 
-  calculateDailyProgress 
+  calculateDailyProgress,
+  vacationDays
 }) => {
   const today = new Date().toISOString().split('T')[0];
 
