@@ -9,7 +9,124 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          category: string
+          child_id: string
+          completed: boolean | null
+          created_at: string | null
+          date: string
+          description: string
+          duration: number | null
+          id: string
+          type: Database["public"]["Enums"]["activity_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          child_id: string
+          completed?: boolean | null
+          created_at?: string | null
+          date: string
+          description: string
+          duration?: number | null
+          id?: string
+          type: Database["public"]["Enums"]["activity_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          child_id?: string
+          completed?: boolean | null
+          created_at?: string | null
+          date?: string
+          description?: string
+          duration?: number | null
+          id?: string
+          type?: Database["public"]["Enums"]["activity_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      behaviors: {
+        Row: {
+          child_id: string
+          created_at: string | null
+          date: string
+          deduction: number | null
+          id: string
+          type: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string | null
+          date: string
+          deduction?: number | null
+          id?: string
+          type: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string | null
+          date?: string
+          deduction?: number | null
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "behaviors_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      children: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      vacation_days: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +135,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      activity_type: "chore" | "education" | "skill"
+      behavior_type:
+        | "Talking Back"
+        | "Lying"
+        | "Sneaking Food"
+        | "Unauthorized Screen Time"
+        | "Not Following Instructions"
+        | "Fighting with Sibling"
+        | "Disrespectful Language"
+        | "Not Completing Assigned Tasks"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +259,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      activity_type: ["chore", "education", "skill"],
+      behavior_type: [
+        "Talking Back",
+        "Lying",
+        "Sneaking Food",
+        "Unauthorized Screen Time",
+        "Not Following Instructions",
+        "Fighting with Sibling",
+        "Disrespectful Language",
+        "Not Completing Assigned Tasks",
+      ],
+    },
   },
 } as const
