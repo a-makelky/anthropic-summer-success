@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { CalendarIcon, Plane } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Child {
   id: string;
@@ -27,6 +31,8 @@ interface Activity {
 interface ActivityLoggerProps {
   children: Child[];
   onAddActivity: (activity: Omit<Activity, 'id'>) => void;
+  vacationDays: string[];
+  onToggleVacation: (date: string) => void;
 }
 
 const choreOptions = [
@@ -62,14 +68,24 @@ const skillOptions = [
   'Art Practice'
 ];
 
-const ActivityLogger: React.FC<ActivityLoggerProps> = ({ children, onAddActivity }) => {
+const ActivityLogger: React.FC<ActivityLoggerProps> = ({ 
+  children, 
+  onAddActivity, 
+  vacationDays, 
+  onToggleVacation 
+}) => {
   const [selectedChild, setSelectedChild] = useState('');
   const [activityType, setActivityType] = useState<'chore' | 'education' | 'skill'>('chore');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const today = new Date().toISOString().split('T')[0];
+  const scheduleStart = new Date(2025, 5, 1); // June 1, 2025
+  const scheduleEnd = new Date(2025, 7, 31); // August 31, 2025
+
+  const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
+  const isVacationDay = vacationDays.includes(selectedDateString);
 
   const getCategoryOptions = () => {
     switch (activityType) {
@@ -92,14 +108,19 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({ children, onAddActivity
       return;
     }
 
+    if (isVacationDay) {
+      toast.error('Cannot log activities on vacation days');
+      return;
+    }
+
     const newActivity: Omit<Activity, 'id'> = {
       childId: selectedChild,
-      date: today,
+      date: selectedDateString,
       type: activityType,
       category,
       description,
       duration: duration ? parseInt(duration) : undefined,
-      completed: true // Mark as completed when logged
+      completed: true
     };
 
     onAddActivity(newActivity);
@@ -110,7 +131,13 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({ children, onAddActivity
     setDuration('');
     
     const childName = children.find(c => c.id === selectedChild)?.name;
-    toast.success(`Activity logged for ${childName}!`);
+    toast.success(`Activity logged for ${childName} on ${format(selectedDate, 'MMM d, yyyy')}!`);
+  };
+
+  const handleToggleVacation = () => {
+    onToggleVacation(selectedDateString);
+    const action = isVacationDay ? 'unmarked' : 'marked';
+    toast.success(`${format(selectedDate, 'MMM d, yyyy')} ${action} as vacation day`);
   };
 
   const getActivityIcon = () => {
@@ -151,6 +178,57 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({ children, onAddActivity
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Date Selection */}
+            <div className="space-y-2">
+              <Label>Select Date</Label>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[240px] justify-start text-left font-normal",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      disabled={(date) => 
+                        date < scheduleStart || date > scheduleEnd
+                      }
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <Button
+                  type="button"
+                  variant={isVacationDay ? "default" : "outline"}
+                  onClick={handleToggleVacation}
+                  className={cn(
+                    "flex items-center gap-2",
+                    isVacationDay && "bg-orange-500 hover:bg-orange-600"
+                  )}
+                >
+                  <Plane className="w-4 h-4" />
+                  {isVacationDay ? 'Vacation Day' : 'Mark Vacation'}
+                </Button>
+              </div>
+              {isVacationDay && (
+                <p className="text-sm text-orange-600 font-medium">
+                  This day is marked as vacation - activities cannot be logged
+                </p>
+              )}
+            </div>
+
             {/* Child Selection */}
             <div className="space-y-2">
               <Label htmlFor="child">Select Child</Label>
@@ -246,8 +324,12 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({ children, onAddActivity
               </div>
             )}
 
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-3">
-              Log Activity
+            <Button 
+              type="submit" 
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+              disabled={isVacationDay}
+            >
+              {isVacationDay ? 'Cannot Log on Vacation Day' : 'Log Activity'}
             </Button>
           </form>
         </CardContent>

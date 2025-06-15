@@ -52,38 +52,78 @@ const Index = () => {
 
   const [activities, setActivities] = useState<Activity[]>([]);
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
+  const [vacationDays, setVacationDays] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Calculate daily progress for each child
-  const calculateDailyProgress = (childId: string): DailyProgress => {
-    const todayActivities = activities.filter(a => a.childId === childId && a.date === today);
-    const todayBehaviors = behaviors.filter(b => b.childId === childId && b.date === today);
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedActivities = localStorage.getItem('summer-tracker-activities');
+    const savedBehaviors = localStorage.getItem('summer-tracker-behaviors');
+    const savedVacationDays = localStorage.getItem('summer-tracker-vacation-days');
+    
+    if (savedActivities) {
+      setActivities(JSON.parse(savedActivities));
+    }
+    if (savedBehaviors) {
+      setBehaviors(JSON.parse(savedBehaviors));
+    }
+    if (savedVacationDays) {
+      setVacationDays(JSON.parse(savedVacationDays));
+    }
+  }, []);
 
-    const academicTime = todayActivities
+  // Save data to localStorage whenever state changes
+  useEffect(() => {
+    localStorage.setItem('summer-tracker-activities', JSON.stringify(activities));
+  }, [activities]);
+
+  useEffect(() => {
+    localStorage.setItem('summer-tracker-behaviors', JSON.stringify(behaviors));
+  }, [behaviors]);
+
+  useEffect(() => {
+    localStorage.setItem('summer-tracker-vacation-days', JSON.stringify(vacationDays));
+  }, [vacationDays]);
+
+  // Calculate daily progress for each child (excluding vacation days)
+  const calculateDailyProgress = (childId: string, date: string = today): DailyProgress => {
+    // If it's a vacation day, return zero progress
+    if (vacationDays.includes(date)) {
+      return {
+        childId,
+        date,
+        academicTime: 0,
+        skillTime: 0,
+        choresCompleted: 0,
+        minecraftTime: 0
+      };
+    }
+
+    const dateActivities = activities.filter(a => a.childId === childId && a.date === date);
+    const dateBehaviors = behaviors.filter(b => b.childId === childId && b.date === date);
+
+    const academicTime = dateActivities
       .filter(a => a.type === 'education' && a.completed)
       .reduce((sum, a) => sum + (a.duration || 0), 0);
 
-    const skillTime = todayActivities
+    const skillTime = dateActivities
       .filter(a => a.type === 'skill' && a.completed)
       .reduce((sum, a) => sum + (a.duration || 0), 0);
 
-    const choresCompleted = todayActivities
+    const choresCompleted = dateActivities
       .filter(a => a.type === 'chore' && a.completed).length;
 
-    // Base minecraft time: 45 minutes if all goals met
     const goalsReached = academicTime >= 120 && skillTime >= 60 && choresCompleted >= 2;
     const baseMinecraftTime = goalsReached ? 45 : 0;
 
-    // Deductions from behavior
-    const totalDeductions = todayBehaviors.reduce((sum, b) => sum + b.deduction, 0);
-
+    const totalDeductions = dateBehaviors.reduce((sum, b) => sum + b.deduction, 0);
     const minecraftTime = Math.max(0, baseMinecraftTime - totalDeductions);
 
     return {
       childId,
-      date: today,
+      date,
       academicTime,
       skillTime,
       choresCompleted,
@@ -113,6 +153,16 @@ const Index = () => {
     ));
   };
 
+  const toggleVacationDay = (date: string) => {
+    setVacationDays(prev => 
+      prev.includes(date) 
+        ? prev.filter(d => d !== date)
+        : [...prev, date]
+    );
+  };
+
+  const isVacationDay = vacationDays.includes(today);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -121,7 +171,7 @@ const Index = () => {
             🌞 Summer Success Tracker
           </h1>
           <p className="text-gray-600 text-lg">
-            Track daily goals and earn Minecraft time!
+            Track daily goals and earn Minecraft time! (June 1 - August 31, 2025)
           </p>
         </div>
 
@@ -135,13 +185,29 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            {isVacationDay && (
+              <Card className="bg-orange-50 border-orange-200">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-orange-700">
+                    <span className="text-2xl">🏖️</span>
+                    <span className="font-semibold text-lg">Vacation Day!</span>
+                  </div>
+                  <p className="text-orange-600 text-sm mt-1">
+                    No goals tracking today - enjoy your break!
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid md:grid-cols-2 gap-6">
               {children.map(child => {
                 const progress = calculateDailyProgress(child.id);
                 const todayActivities = activities.filter(a => a.childId === child.id && a.date === today);
                 
                 return (
-                  <Card key={child.id} className="bg-white shadow-lg border-2 border-blue-200">
+                  <Card key={child.id} className={`shadow-lg border-2 ${
+                    isVacationDay ? 'border-orange-200 bg-orange-50' : 'border-blue-200 bg-white'
+                  }`}>
                     <CardHeader className="pb-4">
                       <CardTitle className="flex items-center justify-between text-2xl">
                         <span className="text-blue-700">{child.name}</span>
@@ -254,7 +320,12 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="log-activity">
-            <ActivityLogger children={children} onAddActivity={addActivity} />
+            <ActivityLogger 
+              children={children} 
+              onAddActivity={addActivity}
+              vacationDays={vacationDays}
+              onToggleVacation={toggleVacationDay}
+            />
           </TabsContent>
 
           <TabsContent value="log-behavior">
@@ -267,6 +338,7 @@ const Index = () => {
               activities={activities} 
               behaviors={behaviors}
               calculateDailyProgress={calculateDailyProgress}
+              vacationDays={vacationDays}
             />
           </TabsContent>
 
@@ -275,6 +347,7 @@ const Index = () => {
               children={children} 
               activities={activities} 
               behaviors={behaviors}
+              vacationDays={vacationDays}
             />
           </TabsContent>
         </Tabs>
