@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Plus, Star, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import ActivityLogger from '@/components/ActivityLogger';
 import BehaviorLogger from '@/components/BehaviorLogger';
 import QuickStats from '@/components/QuickStats';
+import WeeklyMonthlyView from '@/components/WeeklyMonthlyView';
 
 // Types
 interface Child {
@@ -126,11 +126,12 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
             <TabsTrigger value="dashboard">📊 Dashboard</TabsTrigger>
             <TabsTrigger value="log-activity">📝 Log Activity</TabsTrigger>
             <TabsTrigger value="log-behavior">⚠️ Log Behavior</TabsTrigger>
             <TabsTrigger value="quick-stats">📈 Stats</TabsTrigger>
+            <TabsTrigger value="weekly-monthly">📅 Overview</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -266,6 +267,14 @@ const Index = () => {
               activities={activities} 
               behaviors={behaviors}
               calculateDailyProgress={calculateDailyProgress}
+            />
+          </TabsContent>
+
+          <TabsContent value="weekly-monthly">
+            <WeeklyMonthlyView 
+              children={children} 
+              activities={activities} 
+              behaviors={behaviors}
             />
           </TabsContent>
         </Tabs>
