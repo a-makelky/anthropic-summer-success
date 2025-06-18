@@ -58,7 +58,7 @@ const Index = () => {
     addBehavior,
     toggleActivityCompletion,
     toggleVacationDay
-  } = useSupabaseData();
+  } = useSupabaseData(user); // Pass user state to the hook
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const today = new Date().toISOString().split('T')[0];
