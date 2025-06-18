@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -185,33 +184,36 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
   const dailyData = getDailyBreakdown();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+    <div className="space-y-4 px-2 sm:px-0">
+      {/* Header - Mobile Optimized */}
+      <div className="space-y-4">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">
             📈 {viewType === 'weekly' ? 'Weekly' : 'Monthly'} Overview
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {format(currentInterval.start, 'MMM d')} - {format(currentInterval.end, 'MMM d, yyyy')}
           </p>
         </div>
         
-        <div className="flex gap-4">
+        {/* Controls - Stacked on mobile */}
+        <div className="space-y-3 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
           <select 
             value={selectedChild} 
             onChange={(e) => setSelectedChild(e.target.value)}
-            className="px-3 py-2 border rounded-lg bg-white"
+            className="w-full sm:w-auto px-3 py-2 border rounded-lg bg-white text-sm"
           >
             {children.map(child => (
               <option key={child.id} value={child.id}>{child.name}</option>
             ))}
           </select>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             <Button 
               variant={viewType === 'weekly' ? 'default' : 'outline'}
               onClick={() => setViewType('weekly')}
               size="sm"
+              className="flex-1 sm:flex-none text-xs sm:text-sm"
             >
               Weekly
             </Button>
@@ -219,6 +221,7 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
               variant={viewType === 'monthly' ? 'default' : 'outline'}
               onClick={() => setViewType('monthly')}
               size="sm"
+              className="flex-1 sm:flex-none text-xs sm:text-sm"
             >
               Monthly
             </Button>
@@ -226,36 +229,36 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Summary Stats - Mobile Grid */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-700">{stats.successfulDays}</div>
-            <div className="text-sm text-green-600">Successful Days</div>
-            <div className="text-xs text-gray-500">{stats.successRate}% success rate</div>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-green-700">{stats.successfulDays}</div>
+            <div className="text-xs sm:text-sm text-green-600">Successful Days</div>
+            <div className="text-xs text-gray-500">{stats.successRate}% success</div>
           </CardContent>
         </Card>
         
         <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-700">{Math.round(stats.totalAcademicTime / 60)}h</div>
-            <div className="text-sm text-blue-600">Academic Time</div>
-            <div className="text-xs text-gray-500">{stats.totalAcademicTime} minutes</div>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-blue-700">{Math.round(stats.totalAcademicTime / 60)}h</div>
+            <div className="text-xs sm:text-sm text-blue-600">Academic Time</div>
+            <div className="text-xs text-gray-500">{stats.totalAcademicTime} min</div>
           </CardContent>
         </Card>
         
         <Card className="bg-orange-50 border-orange-200">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-700">{Math.round(stats.totalSkillTime / 60)}h</div>
-            <div className="text-sm text-orange-600">Skill Time</div>
-            <div className="text-xs text-gray-500">{stats.totalSkillTime} minutes</div>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-orange-700">{Math.round(stats.totalSkillTime / 60)}h</div>
+            <div className="text-xs sm:text-sm text-orange-600">Skill Time</div>
+            <div className="text-xs text-gray-500">{stats.totalSkillTime} min</div>
           </CardContent>
         </Card>
         
         <Card className="bg-purple-50 border-purple-200">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-700">{stats.totalChores}</div>
-            <div className="text-sm text-purple-600">Chores Done</div>
+          <CardContent className="p-3 sm:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-purple-700">{stats.totalChores}</div>
+            <div className="text-xs sm:text-sm text-purple-600">Chores Done</div>
             <div className="text-xs text-gray-500">Total completed</div>
           </CardContent>
         </Card>
@@ -264,88 +267,95 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
       {/* Behavior Summary */}
       {stats.totalBehaviorIssues > 0 && (
         <Card className="bg-red-50 border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <AlertTriangle className="w-5 h-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-red-700 text-base sm:text-lg">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
               Behavior Summary
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center">
-              <span>{stats.totalBehaviorIssues} behavior issues logged</span>
-              <Badge variant="destructive">-{stats.totalMinutesLost} minutes lost</Badge>
+          <CardContent className="pt-0">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span className="text-sm">{stats.totalBehaviorIssues} behavior issues logged</span>
+              <Badge variant="destructive" className="text-xs">-{stats.totalMinutesLost} minutes lost</Badge>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Daily Breakdown */}
+      {/* Daily Breakdown - Mobile Optimized */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
             Daily Breakdown - {selectedChildName}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {dailyData.map(day => (
-              <div key={day.dateString} className={`flex items-center justify-between p-3 rounded-lg ${
-                day.isVacation ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50'
+              <div key={day.dateString} className={`p-3 rounded-lg border ${
+                day.isVacation ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200'
               }`}>
-                <div className="flex items-center gap-4">
-                  <div className="font-medium min-w-[80px]">
-                    {format(day.date, 'MMM d')}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {format(day.date, 'EEEE')}
-                  </div>
-                  {day.isVacation && (
-                    <Badge variant="outline" className="text-orange-600 border-orange-600">
-                      🏖️ Vacation
-                    </Badge>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  {!day.isVacation ? (
-                    <>
-                      <div className="flex gap-2 text-sm">
-                        <span className={`px-2 py-1 rounded ${day.academicTime >= 120 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                          📚 {day.academicTime}min
-                        </span>
-                        <span className={`px-2 py-1 rounded ${day.skillTime >= 60 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                          💪 {day.skillTime}min
-                        </span>
-                        <span className={`px-2 py-1 rounded ${day.chores >= 2 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
-                          🏠 {day.chores}
-                        </span>
-                      </div>
-                      
-                      {day.behaviorIssues > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          -{day.behaviorIssues} issues
-                        </Badge>
-                      )}
-                      
-                      {day.allGoalsMet ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-orange-600 text-sm font-medium">
-                      No tracking on vacation day
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  {/* Date Info */}
+                  <div className="flex items-center gap-3">
+                    <div className="font-medium text-sm min-w-[60px] sm:min-w-[80px]">
+                      {format(day.date, 'MMM d')}
                     </div>
-                  )}
+                    <div className="text-xs sm:text-sm text-gray-600">
+                      {format(day.date, 'EEEE')}
+                    </div>
+                    {day.isVacation && (
+                      <Badge variant="outline" className="text-xs text-orange-600 border-orange-600">
+                        🏖️ Vacation
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Progress Info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    {!day.isVacation ? (
+                      <>
+                        {/* Stats - Mobile: Stacked, Desktop: Row */}
+                        <div className="flex flex-wrap gap-1 sm:gap-2 text-xs">
+                          <span className={`px-2 py-1 rounded text-xs ${day.academicTime >= 120 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                            📚 {day.academicTime}min
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs ${day.skillTime >= 60 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                            💪 {day.skillTime}min
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs ${day.chores >= 2 ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                            🏠 {day.chores}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {day.behaviorIssues > 0 && (
+                            <Badge variant="destructive" className="text-xs">
+                              -{day.behaviorIssues} issues
+                            </Badge>
+                          )}
+                          
+                          {day.allGoalsMet ? (
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                          ) : (
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-gray-300" />
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-orange-600 text-xs sm:text-sm font-medium">
+                        No tracking on vacation day
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
           
           {dailyData.length === 0 && (
-            <p className="text-gray-500 text-center py-8 italic">
+            <p className="text-gray-500 text-center py-8 italic text-sm">
               No data available for this period
             </p>
           )}
