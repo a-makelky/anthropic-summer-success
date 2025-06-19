@@ -1,10 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Star, Zap, Target, Flame, Award } from 'lucide-react';
-import useSound from 'use-sound';
 
 interface Achievement {
   id: string;
@@ -28,18 +28,10 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   onUnlock
 }) => {
   const [showCelebration, setShowCelebration] = useState(false);
-  const [playSuccess] = useSound('/sounds/success.mp3', { volume: 0.5 });
-  const [playUnlock] = useSound('/sounds/unlock.mp3', { volume: 0.5 });
 
   useEffect(() => {
     if (isNew && achievement.unlocked) {
       setShowCelebration(true);
-      // Play sound (if sounds are available)
-      try {
-        playUnlock();
-      } catch (e) {
-        // Sound files might not be available
-      }
       
       // Trigger confetti
       const duration = 3000;
