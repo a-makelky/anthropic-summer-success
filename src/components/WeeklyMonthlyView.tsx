@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, isWithinInterval, format } from 'date-fns';
 import WeeklyMonthlyHeader from './WeeklyMonthlyHeader';
@@ -12,7 +13,7 @@ interface Child {
 
 interface Activity {
   id: string;
-  childId: string;
+  child_id: string; // Normalized to child_id for consistency
   date: string;
   type: 'chore' | 'education' | 'skill';
   category: string;
@@ -23,7 +24,7 @@ interface Activity {
 
 interface Behavior {
   id: string;
-  childId: string;
+  child_id: string; // Normalized to child_id for consistency
   date: string;
   type: string;
   deduction: number;
@@ -57,17 +58,17 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
     ? { start: weekStart, end: weekEnd }
     : { start: monthStart, end: monthEnd };
 
-  // Filter data for selected child and time period
+  // Filter data for selected child and time period - using child_id consistently
   const getFilteredActivities = () => {
     return activities.filter(activity => 
-      activity.childId === selectedChild &&
+      activity.child_id === selectedChild &&
       isWithinInterval(parseISO(activity.date + 'T00:00:00'), currentInterval)
     );
   };
 
   const getFilteredBehaviors = () => {
     return behaviors.filter(behavior => 
-      behavior.childId === selectedChild &&
+      behavior.child_id === selectedChild &&
       isWithinInterval(parseISO(behavior.date + 'T00:00:00'), currentInterval)
     );
   };

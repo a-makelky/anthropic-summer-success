@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,7 +74,8 @@ const IndexEnhanced = () => {
     addBehavior,
     toggleActivityCompletion,
     toggleVacationDay,
-    refetchData
+    refetchData,
+    getMSTDate
   } = useSupabaseData(user);
   
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -81,10 +83,10 @@ const IndexEnhanced = () => {
   const [deletingActivity, setDeletingActivity] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   
-  const today = new Date().toISOString().split('T')[0];
+  const today = getMSTDate ? getMSTDate() : new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(today);
 
-  // Calculate daily progress (same as original)
+  // Calculate daily progress with MST timezone support
   const calculateDailyProgress = (childId, date = selectedDate) => {
     if (vacationDays.includes(date)) {
       return {
@@ -100,8 +102,6 @@ const IndexEnhanced = () => {
     const dayActivities = activities.filter(
       a => a.child_id === childId && a.date === date && a.completed
     );
-    
-    console.log(`Activities for ${childId} on ${date}:`, dayActivities);
 
     const academicTime = dayActivities
       .filter(a => a.type === 'education')
@@ -118,20 +118,6 @@ const IndexEnhanced = () => {
     const behaviorDeductions = behaviors
       .filter(b => b.child_id === childId && b.date === date)
       .reduce((sum, b) => sum + (b.deduction || 0), 0);
-
-    // Debug logging
-    console.log(`Calculating for ${childId} on ${date}:`, {
-      academicTime,
-      skillTime,
-      choresCompleted,
-      behaviorDeductions,
-      goalsCheck: {
-        academic: academicTime >= 120,
-        skill: skillTime >= 60,
-        chores: choresCompleted >= 2,
-        allMet: academicTime >= 120 && skillTime >= 60 && choresCompleted >= 2
-      }
-    });
 
     // Calculate Minecraft time
     let minecraftTime = 0;
@@ -211,14 +197,14 @@ const IndexEnhanced = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", damping: 20 }}
         >
-          <Card className="text-center p-8">
-            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <Card className="text-center p-4 sm:p-8 max-w-md mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               🌞 Summer Success Tracker
             </h2>
-            <p className="text-gray-600 mb-6">Please sign in to access the dashboard</p>
+            <p className="text-gray-600 mb-6 text-sm sm:text-base">Please sign in to access the dashboard</p>
             <Button 
               onClick={() => window.location.href = '/auth'}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full sm:w-auto"
             >
               Go to Login
             </Button>
@@ -245,42 +231,46 @@ const IndexEnhanced = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900 transition-colors duration-300">
-      <div className="container mx-auto p-4">
-        {/* Header */}
+      <div className="container mx-auto p-2 sm:p-4 max-w-7xl">
+        {/* Mobile-Optimized Header */}
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex justify-between items-center mb-8"
+          className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-8 space-y-4 sm:space-y-0"
         >
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
               Summer Success Tracker
             </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">Track progress, earn rewards, achieve greatness!</p>
+            <p className="text-gray-600 dark:text-gray-300 mt-1 text-sm sm:text-base">Track progress, earn rewards, achieve greatness!</p>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center">
             <ThemeToggle />
-            <ExportDataButton 
-              activities={activities}
-              behaviors={behaviors}
-              children={children}
-            />
+            <div className="hidden sm:block">
+              <ExportDataButton 
+                activities={activities}
+                behaviors={behaviors}
+                children={children}
+              />
+            </div>
             <Button
               variant="outline"
               onClick={() => setShowAnalytics(!showAnalytics)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
+              size="sm"
             >
               <BarChart3 className="w-4 h-4" />
-              Analytics
+              <span className="hidden sm:inline">Analytics</span>
             </Button>
             <Button 
               variant="ghost" 
               onClick={signOut}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
+              size="sm"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
         </motion.div>
@@ -293,7 +283,7 @@ const IndexEnhanced = () => {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="mb-8 overflow-hidden"
+              className="mb-4 sm:mb-8 overflow-hidden"
             >
               <AnalyticsDashboard
                 activities={activities}
@@ -304,52 +294,66 @@ const IndexEnhanced = () => {
           )}
         </AnimatePresence>
 
-        {/* Main Tabs */}
+        {/* Mobile-Optimized Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="activities">Activities</TabsTrigger>
-            <TabsTrigger value="behaviors">Behaviors</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-5 min-w-[400px] sm:min-w-0">
+              <TabsTrigger value="dashboard" className="text-xs sm:text-sm px-2 sm:px-3">
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="activities" className="text-xs sm:text-sm px-2 sm:px-3">
+                Activities
+              </TabsTrigger>
+              <TabsTrigger value="behaviors" className="text-xs sm:text-sm px-2 sm:px-3">
+                Behaviors
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="text-xs sm:text-sm px-2 sm:px-3">
+                <Trophy className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Achievements</span>
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="text-xs sm:text-sm px-2 sm:px-3">
+                Calendar
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-6"
+              className="space-y-4 sm:space-y-6"
             >
               {/* Date Selector */}
               <DateSelector
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
+                getMSTDate={getMSTDate}
               />
               
-              {/* Debug Data Flow */}
-              <DebugDataFlow
-                children={children}
-                activities={activities}
-                behaviors={behaviors}
-              />
-              
-              {/* Debug Panel for troubleshooting */}
-              <DebugPanel
-                children={children}
-                activities={activities}
-                behaviors={behaviors}
-                calculateDailyProgress={calculateDailyProgress}
-                selectedDate={selectedDate}
-              />
-              
-              {/* Math Verification Tool */}
-              <MathVerification
-                children={children}
-                activities={activities}
-                behaviors={behaviors}
-                calculateDailyProgress={calculateDailyProgress}
-              />
+              {/* Debug Components - Hidden on mobile */}
+              <div className="hidden lg:block">
+                <DebugDataFlow
+                  children={children}
+                  activities={activities}
+                  behaviors={behaviors}
+                />
+                
+                <DebugPanel
+                  children={children}
+                  activities={activities}
+                  behaviors={behaviors}
+                  calculateDailyProgress={calculateDailyProgress}
+                  selectedDate={selectedDate}
+                />
+                
+                <MathVerification
+                  children={children}
+                  activities={activities}
+                  behaviors={behaviors}
+                  calculateDailyProgress={calculateDailyProgress}
+                />
+              </div>
               
               <QuickStats 
                 activities={activities} 
@@ -360,7 +364,7 @@ const IndexEnhanced = () => {
                 selectedDate={selectedDate}
               />
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
                 {children.map((child, index) => {
                   const progress = calculateDailyProgress(child.id);
                   const isVacation = vacationDays.includes(selectedDate);
@@ -373,37 +377,37 @@ const IndexEnhanced = () => {
                       transition={{ delay: index * 0.1 }}
                     >
                       <Card className="hover:shadow-xl transition-shadow duration-300">
-                        <CardHeader>
-                          <CardTitle className="flex justify-between items-center">
-                            <span className="text-2xl">{child.name}</span>
+                        <CardHeader className="pb-4">
+                          <CardTitle className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <span className="text-xl sm:text-2xl">{child.name}</span>
                             <motion.div 
                               className="flex items-center gap-2"
                               animate={{ scale: progress.minecraftTime > 0 ? [1, 1.1, 1] : 1 }}
                               transition={{ duration: 0.5 }}
                             >
                               <Clock className="w-5 h-5 text-green-600" />
-                              <Badge variant="secondary" className="text-lg px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700">
+                              <Badge variant="secondary" className="text-sm sm:text-lg px-2 sm:px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700">
                                 {progress.minecraftTime} min
                               </Badge>
                             </motion.div>
                           </CardTitle>
                         </CardHeader>
                         
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-4 sm:space-y-6">
                           {/* Progress bars with animations */}
-                          <motion.div className="space-y-4">
+                          <motion.div className="space-y-3 sm:space-y-4">
                             {/* Academic Progress */}
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <span className="font-semibold text-purple-700">📚 Academic Time</span>
-                                <span className="text-sm text-gray-600">
+                                <span className="font-semibold text-purple-700 text-sm sm:text-base">📚 Academic Time</span>
+                                <span className="text-xs sm:text-sm text-gray-600">
                                   {progress.academicTime}/120 minutes
                                 </span>
                               </div>
                               <div className="relative">
                                 <Progress 
                                   value={(progress.academicTime / 120) * 100} 
-                                  className="h-3"
+                                  className="h-2 sm:h-3"
                                 />
                                 {progress.academicTime >= 120 && (
                                   <motion.div
@@ -411,7 +415,7 @@ const IndexEnhanced = () => {
                                     animate={{ scale: 1 }}
                                     className="absolute -right-2 -top-2"
                                   >
-                                    <CheckCircle2 className="w-6 h-6 text-green-600 fill-green-100" />
+                                    <CheckCircle2 className="w-5 sm:w-6 h-5 sm:h-6 text-green-600 fill-green-100" />
                                   </motion.div>
                                 )}
                               </div>
@@ -420,15 +424,15 @@ const IndexEnhanced = () => {
                             {/* Skill Progress */}
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <span className="font-semibold text-orange-700">💪 Skill Training</span>
-                                <span className="text-sm text-gray-600">
+                                <span className="font-semibold text-orange-700 text-sm sm:text-base">💪 Skill Training</span>
+                                <span className="text-xs sm:text-sm text-gray-600">
                                   {progress.skillTime}/60 minutes
                                 </span>
                               </div>
                               <div className="relative">
                                 <Progress 
                                   value={(progress.skillTime / 60) * 100} 
-                                  className="h-3"
+                                  className="h-2 sm:h-3"
                                 />
                                 {progress.skillTime >= 60 && (
                                   <motion.div
@@ -436,7 +440,7 @@ const IndexEnhanced = () => {
                                     animate={{ scale: 1 }}
                                     className="absolute -right-2 -top-2"
                                   >
-                                    <CheckCircle2 className="w-6 h-6 text-green-600 fill-green-100" />
+                                    <CheckCircle2 className="w-5 sm:w-6 h-5 sm:h-6 text-green-600 fill-green-100" />
                                   </motion.div>
                                 )}
                               </div>
@@ -445,8 +449,8 @@ const IndexEnhanced = () => {
                             {/* Chores Progress */}
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <span className="font-semibold text-blue-700">🏠 Chores</span>
-                                <span className="text-sm text-gray-600">
+                                <span className="font-semibold text-blue-700 text-sm sm:text-base">🏠 Chores</span>
+                                <span className="text-xs sm:text-sm text-gray-600">
                                   {progress.choresCompleted}/2 completed
                                 </span>
                               </div>
@@ -459,7 +463,7 @@ const IndexEnhanced = () => {
                                       backgroundColor: progress.choresCompleted >= i ? '#10b981' : '#e5e7eb'
                                     }}
                                     transition={{ duration: 0.3 }}
-                                    className={`h-8 rounded-lg flex items-center justify-center text-sm font-medium ${
+                                    className={`h-6 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-medium ${
                                       progress.choresCompleted >= i 
                                         ? 'text-white' 
                                         : 'text-gray-500'
@@ -481,7 +485,7 @@ const IndexEnhanced = () => {
           </TabsContent>
 
           {/* Activities Tab */}
-          <TabsContent value="activities" className="space-y-6">
+          <TabsContent value="activities" className="space-y-4 sm:space-y-6">
             <ActivityLogger 
               children={children}
               onAddActivity={addActivity}
@@ -489,21 +493,32 @@ const IndexEnhanced = () => {
               onToggleVacation={toggleVacationDay}
             />
             
+            {/* Mobile Export Button */}
+            <div className="sm:hidden">
+              <ExportDataButton 
+                activities={activities}
+                behaviors={behaviors}
+                children={children}
+              />
+            </div>
+            
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Recent Activities</h3>
-              {activities.slice(0, 10).map((activity, index) => {
-                const child = children.find(c => c.id === activity.child_id);
-                return (
-                  <ActivityCard
-                    key={activity.id}
-                    activity={activity}
-                    childName={child?.name || 'Unknown'}
-                    onEdit={setEditingActivity}
-                    onDelete={setDeletingActivity}
-                    index={index}
-                  />
-                );
-              })}
+              <h3 className="text-lg sm:text-xl font-semibold">Recent Activities</h3>
+              <div className="space-y-3">
+                {activities.slice(0, 10).map((activity, index) => {
+                  const child = children.find(c => c.id === activity.child_id);
+                  return (
+                    <ActivityCard
+                      key={activity.id}
+                      activity={activity}
+                      childName={child?.name || 'Unknown'}
+                      onEdit={setEditingActivity}
+                      onDelete={setDeletingActivity}
+                      index={index}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </TabsContent>
 
@@ -534,6 +549,8 @@ const IndexEnhanced = () => {
               activities={activities}
               children={children}
               vacationDays={vacationDays}
+              behaviors={behaviors}
+              getMSTDate={getMSTDate}
             />
           </TabsContent>
         </Tabs>
