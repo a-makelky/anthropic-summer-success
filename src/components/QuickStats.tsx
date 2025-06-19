@@ -11,7 +11,7 @@ interface Child {
 
 interface Activity {
   id: string;
-  childId: string;
+  child_id: string;
   date: string;
   type: 'chore' | 'education' | 'skill';
   category: string;
@@ -22,7 +22,7 @@ interface Activity {
 
 interface Behavior {
   id: string;
-  childId: string;
+  child_id: string;
   date: string;
   type: string;
   deduction: number;
@@ -43,6 +43,7 @@ interface QuickStatsProps {
   behaviors: Behavior[];
   calculateDailyProgress: (childId: string, date?: string) => DailyProgress;
   vacationDays: string[];
+  selectedDate?: string;
 }
 
 const QuickStats: React.FC<QuickStatsProps> = ({ 
@@ -50,24 +51,25 @@ const QuickStats: React.FC<QuickStatsProps> = ({
   activities, 
   behaviors, 
   calculateDailyProgress,
-  vacationDays
+  vacationDays,
+  selectedDate
 }) => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = selectedDate || new Date().toISOString().split('T')[0];
 
   // Get recent activities for today
   const getTodayActivities = (childId: string) => {
-    return activities.filter(a => a.childId === childId && a.date === today);
+    return activities.filter(a => a.child_id === childId && a.date === today);
   };
 
   const getTodayBehaviors = (childId: string) => {
-    return behaviors.filter(b => b.childId === childId && b.date === today);
+    return behaviors.filter(b => b.child_id === childId && b.date === today);
   };
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">📈 Quick Statistics</h2>
-        <p className="text-gray-600">Today's progress summary</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">📈 Quick Statistics</h2>
+        <p className="text-gray-600 dark:text-gray-400">Today's progress summary</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -77,10 +79,10 @@ const QuickStats: React.FC<QuickStatsProps> = ({
           const todayBehaviors = getTodayBehaviors(child.id);
 
           return (
-            <Card key={child.id} className="bg-white shadow-lg">
+            <Card key={child.id} className="bg-white dark:bg-gray-800 shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span className="text-xl text-blue-700">{child.name}</span>
+                  <span className="text-xl text-blue-700 dark:text-blue-400">{child.name}</span>
                   <Badge variant="outline" className="text-lg px-3 py-1">
                     {progress.minecraftTime}min Minecraft
                   </Badge>
@@ -90,38 +92,38 @@ const QuickStats: React.FC<QuickStatsProps> = ({
               <CardContent className="space-y-4">
                 {/* Goal Progress Summary */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-700">
+                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                       {Math.round((progress.academicTime / 120) * 100)}%
                     </div>
-                    <div className="text-sm text-purple-600">Academic</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm text-purple-600 dark:text-purple-400">Academic</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {progress.academicTime}/120 min
                     </div>
                   </div>
                   
-                  <div className="text-center p-3 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-700">
+                  <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                       {Math.round((progress.skillTime / 60) * 100)}%
                     </div>
-                    <div className="text-sm text-orange-600">Skills</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm text-orange-600 dark:text-orange-400">Skills</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {progress.skillTime}/60 min
                     </div>
                   </div>
                   
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-700">
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                       {progress.choresCompleted}/2
                     </div>
-                    <div className="text-sm text-blue-600">Chores</div>
-                    <div className="text-xs text-gray-500">completed</div>
+                    <div className="text-sm text-blue-600 dark:text-blue-400">Chores</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">completed</div>
                   </div>
                 </div>
 
                 {/* Activity Breakdown */}
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                  <h4 className="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
                     Today's Activities ({todayActivities.length})
                   </h4>
@@ -129,8 +131,8 @@ const QuickStats: React.FC<QuickStatsProps> = ({
                   {todayActivities.length > 0 ? (
                     <div className="space-y-1 max-h-24 overflow-y-auto">
                       {todayActivities.map(activity => (
-                        <div key={activity.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
-                          <span className="flex-1">
+                        <div key={activity.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                          <span className="flex-1 dark:text-gray-200">
                             {activity.category}: {activity.description}
                           </span>
                           {activity.duration && (
@@ -142,22 +144,22 @@ const QuickStats: React.FC<QuickStatsProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm italic">No activities logged yet</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm italic">No activities logged yet</p>
                   )}
                 </div>
 
                 {/* Behavior Issues */}
                 {todayBehaviors.length > 0 && (
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-red-700 flex items-center gap-2">
+                    <h4 className="font-semibold text-red-700 dark:text-red-400 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4" />
                       Behavior Issues ({todayBehaviors.length})
                     </h4>
                     
                     <div className="space-y-1 max-h-20 overflow-y-auto">
                       {todayBehaviors.map(behavior => (
-                        <div key={behavior.id} className="flex items-center justify-between text-sm p-2 bg-red-50 rounded">
-                          <span className="flex-1 text-red-700">{behavior.type}</span>
+                        <div key={behavior.id} className="flex items-center justify-between text-sm p-2 bg-red-50 dark:bg-red-900/30 rounded">
+                          <span className="flex-1 text-red-700 dark:text-red-300">{behavior.type}</span>
                           <Badge variant="destructive" className="text-xs">
                             -{behavior.deduction}min
                           </Badge>
@@ -168,9 +170,9 @@ const QuickStats: React.FC<QuickStatsProps> = ({
                 )}
 
                 {/* Overall Status */}
-                <div className="pt-2 border-t">
+                <div className="pt-2 border-t dark:border-gray-600">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-700">Status:</span>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Status:</span>
                     <Badge 
                       variant={progress.minecraftTime > 0 ? "default" : "secondary"}
                       className={progress.minecraftTime > 0 ? "bg-green-600" : ""}
