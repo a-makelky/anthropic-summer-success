@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, isWithinInterval, format } from 'date-fns';
 import WeeklyMonthlyHeader from './WeeklyMonthlyHeader';
@@ -35,18 +34,20 @@ interface WeeklyMonthlyViewProps {
   activities: Activity[];
   behaviors: Behavior[];
   vacationDays: string[];
+  getMSTDate: () => string;
 }
 
 const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({ 
   children, 
   activities, 
   behaviors,
-  vacationDays
+  vacationDays,
+  getMSTDate
 }) => {
   const [selectedChild, setSelectedChild] = useState(children[0]?.id || '');
   const [viewType, setViewType] = useState<'weekly' | 'monthly'>('weekly');
   
-  const today = new Date();
+  const today = new Date(getMSTDate() + 'T00:00:00'); // Ensure we're working with MST date
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday start
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
   const monthStart = startOfMonth(today);
@@ -60,14 +61,14 @@ const WeeklyMonthlyView: React.FC<WeeklyMonthlyViewProps> = ({
   const getFilteredActivities = () => {
     return activities.filter(activity => 
       activity.childId === selectedChild &&
-      isWithinInterval(parseISO(activity.date), currentInterval)
+      isWithinInterval(parseISO(activity.date + 'T00:00:00'), currentInterval)
     );
   };
 
   const getFilteredBehaviors = () => {
     return behaviors.filter(behavior => 
       behavior.childId === selectedChild &&
-      isWithinInterval(parseISO(behavior.date), currentInterval)
+      isWithinInterval(parseISO(behavior.date + 'T00:00:00'), currentInterval)
     );
   };
 

@@ -43,6 +43,7 @@ interface QuickStatsProps {
   behaviors: Behavior[];
   calculateDailyProgress: (childId: string, date?: string) => DailyProgress;
   vacationDays: string[];
+  currentDate: string;
 }
 
 const QuickStats: React.FC<QuickStatsProps> = ({ 
@@ -50,29 +51,28 @@ const QuickStats: React.FC<QuickStatsProps> = ({
   activities, 
   behaviors, 
   calculateDailyProgress,
-  vacationDays
+  vacationDays,
+  currentDate
 }) => {
-  const today = new Date().toISOString().split('T')[0];
-
   // Get recent activities for today
   const getTodayActivities = (childId: string) => {
-    return activities.filter(a => a.childId === childId && a.date === today);
+    return activities.filter(a => a.childId === childId && a.date === currentDate);
   };
 
   const getTodayBehaviors = (childId: string) => {
-    return behaviors.filter(b => b.childId === childId && b.date === today);
+    return behaviors.filter(b => b.childId === childId && b.date === currentDate);
   };
 
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">📈 Quick Statistics</h2>
-        <p className="text-gray-600">Today's progress summary</p>
+        <p className="text-gray-600">Today's progress summary ({currentDate})</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {children.map(child => {
-          const progress = calculateDailyProgress(child.id);
+          const progress = calculateDailyProgress(child.id, currentDate);
           const todayActivities = getTodayActivities(child.id);
           const todayBehaviors = getTodayBehaviors(child.id);
 

@@ -11,6 +11,7 @@ import ActivityLogger from '@/components/ActivityLogger';
 import BehaviorLogger from '@/components/BehaviorLogger';
 import QuickStats from '@/components/QuickStats';
 import WeeklyMonthlyView from '@/components/WeeklyMonthlyView';
+import DateSelector from '@/components/DateSelector';
 
 // Types
 interface Child {
@@ -58,10 +59,21 @@ const Index = () => {
     addBehavior,
     toggleActivityCompletion,
     toggleVacationDay
-  } = useSupabaseData(user); // Pass user state to the hook
+  } = useSupabaseData(user);
   
   const [activeTab, setActiveTab] = useState('dashboard');
-  const today = new Date().toISOString().split('T')[0];
+  
+  // Get current date in MST timezone
+  const getMSTDate = () => {
+    const now = new Date();
+    const mstOffset = -7 * 60; // MST is UTC-7
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const mstTime = new Date(utc + (mstOffset * 60000));
+    return mstTime.toISOString().split('T')[0];
+  };
+
+  const today = getMSTDate();
+  const [selectedDate, setSelectedDate] = useState(today);
 
   // Redirect to auth if not logged in
   if (!user) {
@@ -89,6 +101,17 @@ const Index = () => {
     );
   }
 
+  // Normalize activities and behaviors to use consistent field names
+  const normalizedActivities = activities.map(a => ({
+    ...a,
+    childId: a.child_id
+  }));
+
+  const normalizedBehaviors = behaviors.map(b => ({
+    ...b,
+    childId: b.child_id
+  }));
+
   // Calculate daily progress for each child (excluding vacation days)
   const calculateDailyProgress = (childId: string, date: string = today): DailyProgress => {
     // If it's a vacation day, return zero progress
@@ -103,8 +126,8 @@ const Index = () => {
       };
     }
 
-    const dateActivities = activities.filter(a => a.child_id === childId && a.date === date);
-    const dateBehaviors = behaviors.filter(b => b.child_id === childId && b.date === date);
+    const dateActivities = normalizedActivities.filter(a => a.childId === childId && a.date === date);
+    const dateBehaviors = normalizedBehaviors.filter(b => b.childId === childId && b.date === date);
 
     const academicTime = dateActivities
       .filter(a => a.type === 'education' && a.completed)
@@ -138,7 +161,7 @@ const Index = () => {
     window.location.href = '/auth';
   };
 
-  const isVacationDay = vacationDays.includes(today);
+  const isVacationDay = vacationDays.includes(selectedDate);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
@@ -171,6 +194,12 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            <DateSelector 
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              getMSTDate={getMSTDate}
+            />
+
             {isVacationDay && (
               <Card className="bg-orange-50 border-orange-200">
                 <CardContent className="p-4 text-center">
@@ -179,7 +208,7 @@ const Index = () => {
                     <span className="font-semibold text-lg">Vacation Day!</span>
                   </div>
                   <p className="text-orange-600 text-sm mt-1">
-                    No goals tracking today - enjoy your break!
+                    No goals tracking {selectedDate === today ? 'today' : 'on this date'} - enjoy the break!
                   </p>
                 </CardContent>
               </Card>
@@ -187,8 +216,8 @@ const Index = () => {
 
             <div className="grid md:grid-cols-2 gap-6">
               {children.map(child => {
-                const progress = calculateDailyProgress(child.id);
-                const todayActivities = activities.filter(a => a.child_id === child.id && a.date === today);
+                const progress = calculateDailyProgress(child.id, selectedDate);
+                const dayActivities = normalizedActivities.filter(a => a.childId === child.id && a.date === selectedDate);
                 
                 return (
                   <Card key={child.id} className={`shadow-lg border-2 ${
@@ -278,8 +307,8 @@ const Index = () => {
                       <div className="space-y-2">
                         <h4 className="font-semibold text-gray-700">Today's Activities</h4>
                         <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {todayActivities.length > 0 ? (
-                            todayActivities.map(activity => (
+                          {dayActivities.length > 0 ? (
+                            dayActivities.map(activity => (
                               <div key={activity.id} className="flex items-center gap-2 text-sm p-2 bg-gray-50 rounded">
                                 <input
                                   type="checkbox"
@@ -314,6 +343,7 @@ const Index = () => {
               })}
               vacationDays={vacationDays}
               onToggleVacation={toggleVacationDay}
+              getMSTDate={getMSTDate}
             />
           </TabsContent>
 
@@ -324,25 +354,33 @@ const Index = () => {
                 ...behavior,
                 child_id: behavior.childId
               })} 
+              getMSTDate={getMSTDate}
             />
           </TabsContent>
 
           <TabsContent value="quick-stats">
+            <DateSelector 
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              getMSTDate={getMSTDate}
+            />
             <QuickStats 
               children={children} 
-              activities={activities.map(a => ({ ...a, childId: a.child_id }))} 
-              behaviors={behaviors.map(b => ({ ...b, childId: b.child_id }))}
+              activities={normalizedActivities} 
+              behaviors={normalizedBehaviors}
               calculateDailyProgress={calculateDailyProgress}
               vacationDays={vacationDays}
+              currentDate={selectedDate}
             />
           </TabsContent>
 
           <TabsContent value="weekly-monthly">
             <WeeklyMonthlyView 
               children={children} 
-              activities={activities.map(a => ({ ...a, childId: a.child_id }))} 
-              behaviors={behaviors.map(b => ({ ...b, childId: b.child_id }))}
+              activities={normalizedActivities} 
+              behaviors={normalizedBehaviors}
               vacationDays={vacationDays}
+              getMSTDate={getMSTDate}
             />
           </TabsContent>
         </Tabs>
