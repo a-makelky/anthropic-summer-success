@@ -26,7 +26,6 @@ interface Behavior {
   date: string;
   type: string;
   deduction: number;
-  time_deducted?: number; // Database column name
 }
 
 interface VacationDay {
@@ -102,12 +101,8 @@ export const useSupabaseData = (user: User | null) => {
       setChildren(childrenData || []);
       setActivities(activitiesData || []);
       
-      // Map behaviors to normalize the column name
-      const normalizedBehaviors = (behaviorsData || []).map(b => ({
-        ...b,
-        deduction: b.time_deducted || b.deduction || 0
-      }));
-      setBehaviors(normalizedBehaviors);
+      // Use the deduction field directly since it exists in the database
+      setBehaviors(behaviorsData || []);
       
       setVacationDays(vacationData?.map(v => v.date) || []);
     } catch (error: any) {
@@ -175,7 +170,7 @@ export const useSupabaseData = (user: User | null) => {
           child_id: behavior.child_id,
           date: behavior.date,
           type: behavior.type,
-          time_deducted: behavior.deduction
+          deduction: behavior.deduction
         })
         .select()
         .single();
@@ -184,12 +179,7 @@ export const useSupabaseData = (user: User | null) => {
         throw error;
       }
 
-      // Normalize the behavior data
-      const normalizedBehavior = {
-        ...data,
-        deduction: data.time_deducted || data.deduction || 5
-      };
-      setBehaviors(prev => [normalizedBehavior, ...prev]);
+      setBehaviors(prev => [data, ...prev]);
       toast.success('Behavior logged successfully');
       
       // Refresh data
