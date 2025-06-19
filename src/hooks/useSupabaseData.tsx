@@ -26,6 +26,7 @@ interface Behavior {
   date: string;
   type: string;
   deduction: number;
+  time_deducted?: number; // Database column name
 }
 
 interface VacationDay {
@@ -43,7 +44,7 @@ export const useSupabaseData = (user: User | null) => {
   // Fetch all data - only when user is authenticated
   const fetchData = async () => {
     if (!user) {
-      console.log('No user authenticated, skipping data fetch');
+      // No user authenticated, skipping data fetch
       setLoading(false);
       return;
     }
@@ -62,6 +63,8 @@ export const useSupabaseData = (user: User | null) => {
         console.error('Error fetching children:', childrenError);
         throw childrenError;
       }
+      
+      console.log('Children fetched:', childrenData);
 
       // Fetch activities
       const { data: activitiesData, error: activitiesError } = await supabase
@@ -70,7 +73,7 @@ export const useSupabaseData = (user: User | null) => {
         .order('date', { ascending: false });
 
       if (activitiesError) {
-        console.error('Error fetching activities:', activitiesError);
+        // console.error('Error fetching activities:', activitiesError);
         throw activitiesError;
       }
 
@@ -81,7 +84,7 @@ export const useSupabaseData = (user: User | null) => {
         .order('date', { ascending: false });
 
       if (behaviorsError) {
-        console.error('Error fetching behaviors:', behaviorsError);
+        // console.error('Error fetching behaviors:', behaviorsError);
         throw behaviorsError;
       }
 
@@ -92,23 +95,27 @@ export const useSupabaseData = (user: User | null) => {
         .order('date');
 
       if (vacationError) {
-        console.error('Error fetching vacation days:', vacationError);
+        // console.error('Error fetching vacation days:', vacationError);
         throw vacationError;
       }
 
-      console.log('Data fetched successfully:', {
-        children: childrenData?.length || 0,
-        activities: activitiesData?.length || 0,
-        behaviors: behaviorsData?.length || 0,
-        vacationDays: vacationData?.length || 0
-      });
+      // Data fetched successfully
+      console.log('Activities fetched:', activitiesData);
+      console.log('Behaviors fetched:', behaviorsData);
 
       setChildren(childrenData || []);
       setActivities(activitiesData || []);
-      setBehaviors(behaviorsData || []);
+      
+      // Map behaviors to normalize the column name
+      const normalizedBehaviors = (behaviorsData || []).map(b => ({
+        ...b,
+        deduction: b.time_deducted || b.deduction || 0
+      }));
+      setBehaviors(normalizedBehaviors);
+      
       setVacationDays(vacationData?.map(v => v.date) || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      // console.error('Error fetching data:', error);
       toast.error('Failed to load data. Please check your connection and try again.');
     } finally {
       setLoading(false);
@@ -117,7 +124,7 @@ export const useSupabaseData = (user: User | null) => {
 
   // Only fetch data when user changes and is authenticated
   useEffect(() => {
-    console.log('User state changed:', user ? 'authenticated' : 'not authenticated');
+    // console.log('User state changed:', user ? 'authenticated' : 'not authenticated');
     fetchData();
   }, [user]);
 
@@ -132,7 +139,7 @@ export const useSupabaseData = (user: User | null) => {
       console.log('Adding activity:', activity);
       const { data, error } = await supabase
         .from('activities')
-        .insert([{
+        .insert({
           child_id: activity.child_id,
           date: activity.date,
           type: activity.type,
@@ -140,7 +147,7 @@ export const useSupabaseData = (user: User | null) => {
           description: activity.description,
           duration: activity.duration,
           completed: activity.completed
-        }])
+        })
         .select()
         .single();
 
@@ -149,12 +156,20 @@ export const useSupabaseData = (user: User | null) => {
         throw error;
       }
 
-      console.log('Activity added successfully:', data);
+      // console.log('Activity added successfully:', data);
       setActivities(prev => [data, ...prev]);
       toast.success('Activity added successfully');
-    } catch (error) {
+      
+      // Force a re-render by updating the state
+      toast.loading('Updating dashboard...');
+      setTimeout(async () => {
+        await fetchData();
+        toast.dismiss();
+        toast.success('Dashboard updated!');
+      }, 100);
+    } catch (error: any) {
       console.error('Error adding activity:', error);
-      toast.error('Failed to add activity');
+      toast.error(`Failed to add activity: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -169,12 +184,12 @@ export const useSupabaseData = (user: User | null) => {
       console.log('Adding behavior:', behavior);
       const { data, error } = await supabase
         .from('behaviors')
-        .insert([{
+        .insert({
           child_id: behavior.child_id,
           date: behavior.date,
           type: behavior.type,
-          deduction: behavior.deduction
-        }])
+          time_deducted: behavior.deduction
+        })
         .select()
         .single();
 
@@ -184,11 +199,22 @@ export const useSupabaseData = (user: User | null) => {
       }
 
       console.log('Behavior added successfully:', data);
-      setBehaviors(prev => [data, ...prev]);
+      // Normalize the behavior data
+      const normalizedBehavior = {
+        ...data,
+        deduction: data.time_deducted || data.deduction || 5
+      };
+      console.log('Normalized behavior:', normalizedBehavior);
+      setBehaviors(prev => [normalizedBehavior, ...prev]);
       toast.success('Behavior logged successfully');
-    } catch (error) {
+      
+      // Force a re-render by updating the state
+      setTimeout(() => {
+        fetchData();
+      }, 100);
+    } catch (error: any) {
       console.error('Error adding behavior:', error);
-      toast.error('Failed to log behavior');
+      toast.error(`Failed to log behavior: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -203,23 +229,23 @@ export const useSupabaseData = (user: User | null) => {
       const activity = activities.find(a => a.id === activityId);
       if (!activity) return;
 
-      console.log('Toggling activity completion:', activityId, !activity.completed);
+      // console.log('Toggling activity completion:', activityId, !activity.completed);
       const { error } = await supabase
         .from('activities')
         .update({ completed: !activity.completed })
         .eq('id', activityId);
 
       if (error) {
-        console.error('Error updating activity:', error);
+        // console.error('Error updating activity:', error);
         throw error;
       }
 
-      console.log('Activity completion toggled successfully');
+      // console.log('Activity completion toggled successfully');
       setActivities(prev => prev.map(a => 
         a.id === activityId ? { ...a, completed: !a.completed } : a
       ));
     } catch (error) {
-      console.error('Error updating activity:', error);
+      // console.error('Error updating activity:', error);
       toast.error('Failed to update activity');
     }
   };
@@ -233,7 +259,7 @@ export const useSupabaseData = (user: User | null) => {
 
     try {
       const isVacation = vacationDays.includes(date);
-      console.log('Toggling vacation day:', date, isVacation ? 'remove' : 'add');
+      // console.log('Toggling vacation day:', date, isVacation ? 'remove' : 'add');
       
       if (isVacation) {
         const { error } = await supabase
@@ -242,7 +268,7 @@ export const useSupabaseData = (user: User | null) => {
           .eq('date', date);
 
         if (error) {
-          console.error('Error removing vacation day:', error);
+          // console.error('Error removing vacation day:', error);
           throw error;
         }
 
@@ -253,16 +279,16 @@ export const useSupabaseData = (user: User | null) => {
           .insert([{ date }]);
 
         if (error) {
-          console.error('Error adding vacation day:', error);
+          // console.error('Error adding vacation day:', error);
           throw error;
         }
 
         setVacationDays(prev => [...prev, date].sort());
       }
 
-      console.log('Vacation day toggled successfully');
+      // console.log('Vacation day toggled successfully');
     } catch (error) {
-      console.error('Error toggling vacation day:', error);
+      // console.error('Error toggling vacation day:', error);
       toast.error('Failed to update vacation day');
     }
   };
@@ -277,6 +303,7 @@ export const useSupabaseData = (user: User | null) => {
     addBehavior,
     toggleActivityCompletion,
     toggleVacationDay,
-    refetch: fetchData
+    refetch: fetchData,
+    refetchData: fetchData
   };
 };

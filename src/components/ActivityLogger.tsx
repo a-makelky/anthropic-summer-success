@@ -19,7 +19,7 @@ interface Child {
 
 interface Activity {
   id: string;
-  childId: string;
+  child_id: string;
   date: string;
   type: 'chore' | 'education' | 'skill';
   category: string;
@@ -114,7 +114,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
     }
 
     const newActivity: Omit<Activity, 'id'> = {
-      childId: selectedChild,
+      child_id: selectedChild,
       date: selectedDateString,
       type: activityType,
       category,
@@ -156,13 +156,13 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
   const getActivityColor = () => {
     switch (activityType) {
       case 'chore':
-        return 'border-blue-200 bg-blue-50';
+        return 'border-blue-200 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20';
       case 'education':
-        return 'border-purple-200 bg-purple-50';
+        return 'border-purple-200 bg-purple-50 dark:border-purple-400 dark:bg-purple-900/20';
       case 'skill':
-        return 'border-orange-200 bg-orange-50';
+        return 'border-orange-200 bg-orange-50 dark:border-orange-400 dark:bg-orange-900/20';
       default:
-        return 'border-gray-200 bg-gray-50';
+        return 'border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800';
     }
   };
 
@@ -170,7 +170,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
     <div className="max-w-2xl mx-auto">
       <Card className={`shadow-lg ${getActivityColor()}`}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
+          <CardTitle className="flex items-center gap-2 text-2xl dark:text-gray-100">
             <span>{getActivityIcon()}</span>
             Log Activity
           </CardTitle>
@@ -180,7 +180,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Date Selection */}
             <div className="space-y-2">
-              <Label>Select Date</Label>
+              <Label className="dark:text-gray-200">Select Date</Label>
               <div className="flex gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -231,7 +231,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
 
             {/* Child Selection */}
             <div className="space-y-2">
-              <Label htmlFor="child">Select Child</Label>
+              <Label htmlFor="child" className="dark:text-gray-200">Select Child</Label>
               <Select value={selectedChild} onValueChange={setSelectedChild}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a child" />
@@ -248,12 +248,12 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
 
             {/* Activity Type */}
             <div className="space-y-2">
-              <Label>Activity Type</Label>
+              <Label className="dark:text-gray-200">Activity Type</Label>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { value: 'chore', label: '🏠 Chore', color: 'border-blue-500 bg-blue-100' },
-                  { value: 'education', label: '📚 Education', color: 'border-purple-500 bg-purple-100' },
-                  { value: 'skill', label: '💪 Skill/Strength', color: 'border-orange-500 bg-orange-100' }
+                  { value: 'chore', label: '🏠 Chore', color: 'border-blue-500 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-200' },
+                  { value: 'education', label: '📚 Education', color: 'border-purple-500 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-200' },
+                  { value: 'skill', label: '💪 Skill/Strength', color: 'border-orange-500 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-200' }
                 ].map(type => (
                   <button
                     key={type.value}
@@ -265,7 +265,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
                     className={`p-3 border-2 rounded-lg font-medium transition-all text-center ${
                       activityType === type.value 
                         ? type.color 
-                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                        : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {type.label}
@@ -276,7 +276,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
 
             {/* Category Selection */}
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category" className="dark:text-gray-200">Category</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger>
                   <SelectValue placeholder={`Select ${activityType} type`} />
@@ -293,7 +293,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description/Details</Label>
+              <Label htmlFor="description" className="dark:text-gray-200">Description/Details</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -312,7 +312,7 @@ const ActivityLogger: React.FC<ActivityLoggerProps> = ({
             {/* Duration (for education and skill activities) */}
             {(activityType === 'education' || activityType === 'skill') && (
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Label htmlFor="duration" className="dark:text-gray-200">Duration (minutes)</Label>
                 <Input
                   id="duration"
                   type="number"
