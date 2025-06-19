@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +43,7 @@ interface QuickStatsProps {
   calculateDailyProgress: (childId: string, date?: string) => DailyProgress;
   vacationDays: string[];
   selectedDate?: string;
+  currentDate?: string;
 }
 
 const QuickStats: React.FC<QuickStatsProps> = ({ 
@@ -52,9 +52,11 @@ const QuickStats: React.FC<QuickStatsProps> = ({
   behaviors, 
   calculateDailyProgress,
   vacationDays,
-  selectedDate
+  selectedDate,
+  currentDate
 }) => {
-  const today = selectedDate || new Date().toISOString().split('T')[0];
+  // Use selectedDate if provided, otherwise fall back to currentDate or today
+  const today = selectedDate || currentDate || new Date().toISOString().split('T')[0];
 
   // Get recent activities for today
   const getTodayActivities = (childId: string) => {
@@ -74,7 +76,7 @@ const QuickStats: React.FC<QuickStatsProps> = ({
 
       <div className="grid md:grid-cols-2 gap-6">
         {children.map(child => {
-          const progress = calculateDailyProgress(child.id);
+          const progress = calculateDailyProgress(child.id, today);
           const todayActivities = getTodayActivities(child.id);
           const todayBehaviors = getTodayBehaviors(child.id);
 
