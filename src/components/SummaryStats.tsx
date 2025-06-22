@@ -16,7 +16,7 @@ interface SummaryStatsProps {
 
 const SummaryStats: React.FC<SummaryStatsProps> = ({ stats }) => {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
       <Card className="bg-green-50 border-green-200">
         <CardContent className="p-3 sm:p-4 text-center">
           <div className="text-xl sm:text-2xl font-bold text-green-700">{stats.successfulDays}</div>
